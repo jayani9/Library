@@ -140,19 +140,30 @@ const getToken = async (req, res) => {
   }
 };
 
-const logOut = (req, res) => {
+const logOut = async (req, res) => {
   try {
     const { refreshToken } = req.body;
+
     if (!refreshToken) {
       return res.status(400).json({ message: "Refresh token is missing" });
     }
-    refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+    const user = await userModel.findOneAndUpdate(
+      { refreshToken },
+      { $unset: { refreshToken: "" } },
+      { new: true }
+    );
 
-    return res.status(204).json({ message: "Logout Successfully" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found or already logged out" });
+    }
+
+    return res.status(200).json({ message: "Logout successful" });
   } catch (error) {
+    console.error("Logout Error:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 const getAllUsers = async (req, res) => {
   try {
@@ -175,4 +186,3 @@ export default {
   logOut,
   getAllUsers,
 };
-// rounded-[50%] bg-red-400 p-2 m-1
